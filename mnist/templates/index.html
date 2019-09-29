@@ -1,0 +1,122 @@
+<html>
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='index.css') }}">
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@2.3.2/dist/signature_pad.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+<body>
+    <div class='divider'>
+        <div class="holder" id="canvasHolder">
+            <canvas class="canva" id="canvasHold"></canvas>
+            <div class="buttonHold"><button id="clear">Clear</button><button id="Enter">Enter</button></div>
+
+        </div>
+        <div class="holder">
+            <div class="output"><label id="result">Draw a number in the box above!</label></div>
+        </div>
+    </div>
+</body>
+
+{% block javascript %}
+<script>
+
+    // crop the image to be smaller
+    SignaturePad.prototype.removeBlanks = function () {
+        var imgWidth = this._ctx.canvas.width;
+        var imgHeight = this._ctx.canvas.height;
+        var imageData = this._ctx.getImageData(0, 0, imgWidth, imgHeight),
+            data = imageData.data,
+            getAlpha = function (x, y) {
+                return data[(imgWidth * y + x) * 4 + 3]
+            },
+            scanY = function (fromTop) {
+                var offset = fromTop ? 1 : -1;
+
+                // loop through each row
+                for (var y = fromTop ? 0 : imgHeight - 1; fromTop ? (y < imgHeight) : (y >
+                    -1); y += offset) {
+
+                    // loop through each column
+                    for (var x = 0; x < imgWidth; x++) {
+                        if (getAlpha(x, y)) {
+                            return y;
+                        }
+                    }
+                }
+                return null; // all image is white
+            },
+            scanX = function (fromLeft) {
+                var offset = fromLeft ? 1 : -1;
+
+                // loop through each column
+                for (var x = fromLeft ? 0 : imgWidth - 1; fromLeft ? (x < imgWidth) : (x >
+                    -1); x += offset) {
+
+                    // loop through each row
+                    for (var y = 0; y < imgHeight; y++) {
+                        if (getAlpha(x, y)) {
+                            return x;
+                        }
+                    }
+                }
+                return null; // all image is white
+            };
+
+        var cropTop = scanY(true) - 5,
+            cropBottom = scanY(false) + 5,
+            cropLeft = scanX(true) - 5,
+            cropRight = scanX(false) + 5;
+
+        var horizontal = cropRight - cropLeft;
+        var vertical = cropBottom - cropTop
+
+        if (horizontal > vertical) {
+            diff = horizontal - vertical
+            cropBottom += (diff / 2)
+            cropTop -= (diff / 2)
+        } else {
+            diff = vertical - horizontal
+            cropLeft -= (diff / 2)
+            cropRight += (diff / 2)
+        }
+
+        var relevantData = this._ctx.getImageData(cropLeft, cropTop, cropRight - cropLeft, cropBottom - cropTop);
+        this._ctx.canvas.width = cropRight - cropLeft;
+        this._ctx.canvas.height = cropBottom - cropTop;
+        this._ctx.clearRect(0, 0, cropRight - cropLeft, cropBottom - cropTop);
+        this._ctx.putImageData(relevantData, 0, 0);
+    };
+
+    var canvas = document.getElementById('canvasHold');
+
+    var signaturePad = new SignaturePad(canvas);
+    
+    // clears the signature pad
+    $("#clear").click(function () {
+        location.reload();
+    });
+
+    // var button = document.getElementById('Enter');
+    $("#Enter").click(function () {
+        if (signaturePad.isEmpty()) {
+            $('#result').text("Need a drawing!")
+        } else {
+            var $SCRIPT_ROOT = {{ request.script_root | tojson | safe
+            }};
+            tempSig = signaturePad
+            tempSig.removeBlanks();
+            var datas = tempSig.toDataURL();
+            $.ajax({
+                type: "GET",
+                url: $SCRIPT_ROOT + "/predict",
+                data: { "data": datas },
+                success: function (newD) {
+                    console.log(newD);
+                    $('#result').text(' Predicted Output: ' + newD);
+                }
+            });
+        }
+    });
+    {% endblock %}
+</script>
+
+</html>

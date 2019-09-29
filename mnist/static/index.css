@@ -1,0 +1,61 @@
+body {
+    width: 100vw;
+    height: 100vh;
+}
+
+.divider {
+    display: flex;
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+    flex-flow: column;
+    flex-direction: column;
+}
+
+.holder {
+    width: 100vw;
+    height: 50vh;
+    position: relative;
+    justify-content: center;
+    display: flex;
+    flex-direction: column;
+}
+
+
+.canva {
+    background-color: white;
+    width: 300px;
+    height: 200px;
+    border: 1px dotted black;
+    margin: auto;
+    display: inline-block;
+}
+
+.buttonHold {
+    display: inline-block;
+    margin: auto;
+}
+.output {
+    border-top: 1px black dotted;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+#Enter {
+    width: 150px;
+    height: 40px;
+    margin: auto;
+}
+
+#clear {
+    width: 150px;
+    height: 40px;
+    margin-right: 10px;
+}
+
+#result {
+    display: inline-block;
+    margin: auto;
+}
